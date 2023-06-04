@@ -9,20 +9,22 @@ on:
 jobs:
   validate-pr:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Set up Node.js
+      - name: Set up Node.js 16.x
         uses: actions/setup-node@v2
         with:
-          node-version: '16'
-
-      - name: Install ajv
-        run: npm install -g ajv
-
+          node-version: 16
 
       - name: Checkout code
         uses: actions/checkout@v2
-      
+
+      - name: Install ajv
+        run: npm install -g ajv@7
+
       - name: Validate PR Configuration
         run: |
           # Fetch the changed JSON file in the pull request
@@ -37,7 +39,7 @@ jobs:
             fi
           done
 
-          # If a JSON file is found, validate its format against the schema
+          # If a JSON file is found, validate its format
           if [[ -n $JSON_FILE ]]; then
             if ! ajv test -s schema.json -d $JSON_FILE --valid; then
               echo "Invalid JSON file: $JSON_FILE"
