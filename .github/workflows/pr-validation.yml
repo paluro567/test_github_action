@@ -16,24 +16,26 @@ jobs:
       
       - name: Validate PR Configuration
         run: |
-          CONFIG_FILE="./config.json"
-          
-          # Validate JSON format
-          if ! jq . "$CONFIG_FILE" > /dev/null 2>&1; then
-            echo "Invalid JSON configuration file: $CONFIG_FILE"
-            exit 1
-          fi
-          
-          # Validate required fields
-          if [[ -z "$(jq -r '.github_url' "$CONFIG_FILE")" ]]; then
-            echo "Missing 'github_url' field in the JSON configuration file"
-            exit 1
-          fi
-          if [[ -z "$(jq -r '.dockerfile' "$CONFIG_FILE")" ]]; then
-            echo "Missing 'dockerfile' field in the JSON configuration file"
-            exit 1
-          fi
-          if [[ "$(jq -r '.build_root' "$CONFIG_FILE")" != "true" && "$(jq -r '.build_root' "$CONFIG_FILE")" != "false" ]]; then
-            echo "Invalid 'build_root' field value in the JSON configuration file. Expected true or false."
-            exit 1
+          # Fetch the changed JSON file in the pull request
+          CHANGED_FILES=$(git diff --name-only HEAD..$GITHUB_SHA)
+          JSON_FILE=""
+
+          # Loop through the changed files to find the JSON file
+          for FILE in $CHANGED_FILES; do
+            if [[ $FILE == *.json ]]; then
+              JSON_FILE=$FILE
+              break
+            fi
+          done
+
+          # If a JSON file is found, validate its format against the schema
+          if [[ -n $JSON_FILE ]]; then
+            if ! ajv test -s schema.json -d $JSON_FILE --valid; then
+              echo "Invalid JSON file: $JSON_FILE"
+              exit 1
+            else
+              echo "Valid JSON file: $JSON_FILE"
+            fi
+          else
+            echo "No JSON file found in the pull request"
           fi

@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "github_url": {
+      "type": "string"
+    },
+    "build_root": {
+      "type": "boolean"
+    }
+  },
+  "required": ["github_url", "build_root"]
+}
