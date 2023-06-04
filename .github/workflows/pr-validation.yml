@@ -33,6 +33,7 @@ jobs:
             for FILE in $JSON_FILES; do
               if ! jq -e '.github_url' $FILE > /dev/null 2>&1; then
                 echo "Invalid JSON file: $FILE - Missing 'github_url' string"
+
                 exit 1
               fi
 
