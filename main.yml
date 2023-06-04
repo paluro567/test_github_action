@@ -1,0 +1,23 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Validate JSON Configuration
+        run: |
+          CONFIG_FILE="path/to/config.json"
+          if ! jq . "$CONFIG_FILE" > /dev/null 2>&1; then
+            echo "Invalid JSON configuration file: $CONFIG_FILE"
+            exit 1
+          fi
