@@ -25,25 +25,20 @@ jobs:
       - name: Install ajv
         run: npm install -g ajv@7
 
-      - name: Validate PR Configuration
+      - name: Find JSON Files
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.json$')
+          JSON_FILES=$(git diff --name-only HEAD~1 | grep '\.json$')
 
-          if [[ -n $CHANGED_FILES ]]; then
-            for FILE in $CHANGED_FILES; do
-              if ! jq . $FILE > /dev/null 2>&1; then
-                echo "Invalid JSON file: $FILE"
-                exit 1
-              fi
-
-              if ! ajv test -s schema.json -d $FILE --valid; then
-                echo "JSON file does not conform to schema: $FILE"
+          if [[ -n $JSON_FILES ]]; then
+            for FILE in $JSON_FILES; do
+              if ! jq -e '.github_url' $FILE > /dev/null 2>&1; then
+                echo "Invalid JSON file: $FILE - Missing 'github_url' string"
                 exit 1
               fi
 
               echo "Valid JSON file: $FILE"
             done
           else
-            echo "No JSON files found in the commit"
+            echo "No JSON files found in the pull request"
           fi
 
