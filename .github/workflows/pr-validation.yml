@@ -27,7 +27,8 @@ jobs:
 
       - name: Validate JSON files
         run: |
-          for file in $(git diff --name-only $(git merge-base origin/main ${{ github.sha }})..${{ github.sha }} --diff-filter=d | grep -E '\.json$'); do
+          base_branch=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+          for file in $(git diff --name-only origin/$base_branch...${{ github.sha }} --diff-filter=d | grep -E '\.json$'); do
             if jq -e 'has("github_url")' "$file" > /dev/null; then
               echo "Valid JSON file: $file"
             else
