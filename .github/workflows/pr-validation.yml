@@ -36,7 +36,7 @@ jobs:
                 exit 1
               fi
 
-              if ! ajv test -s schema.json -d $FILE --valid; then
+              if ! ajv test -s ./schema.json -d $FILE --valid; then
                 echo "JSON file does not conform to schema: $FILE"
                 exit 1
               fi
