@@ -27,8 +27,8 @@ jobs:
 
       - name: Validate JSON files
         run: |
-          base_branch=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
-          for file in $(git diff --name-only origin/$base_branch...${{ github.sha }} --diff-filter=d | grep -E '\.json$'); do
+          base_branch="${{ steps.base_branch.outputs.branch }}"
+          for file in $(git diff --name-only $base_branch...${{ github.sha }} --diff-filter=d | grep -E '\.json$'); do
             if jq -e 'has("github_url")' "$file" > /dev/null; then
               echo "Valid JSON file: $file"
             else
@@ -36,3 +36,10 @@ jobs:
               exit 1
             fi
           done
+
+
+
+
+
+
+
