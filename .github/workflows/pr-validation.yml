@@ -27,7 +27,8 @@ jobs:
 
       - name: Validate PR JSON
         run: |
-          PR_FILES=$(git diff --name-only $(git merge-base HEAD main)..main -- '*.json')
+          PR_FILES=$(git diff --name-only HEAD $(git merge-base HEAD main) -- '*.json')
+
 
           if [[ -n $PR_FILES ]]; then
             for FILE in $PR_FILES; do
