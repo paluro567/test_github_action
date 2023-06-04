@@ -21,37 +21,75 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-        
-      - name: Print changed files
-        run: echo "$CHANGED_FILES"
-
-
 
       - name: Install ajv
         run: npm install -g ajv@7
 
       - name: Validate PR Configuration
         run: |
-          # Fetch the changed JSON file in the pull request
-          CHANGED_FILES=$(git diff --name-only HEAD..$GITHUB_SHA)
-          JSON_FILE=""
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.json$')
 
-          # Loop through the changed files to find the JSON file
-          for FILE in $CHANGED_FILES; do
-            if [[ $FILE == *.json ]]; then
-              JSON_FILE=$FILE
-              break
-            fi
-          done
+          if [[ -n $CHANGED_FILES ]]; then
+            for FILE in $CHANGED_FILES; do
+              if ! jq . $FILE > /dev/null 2>&1; then
+                echo "Invalid JSON file: $FILE"
+                exit 1
+              fi
 
-          # If a JSON file is found, validate its format
-          if [[ -n $JSON_FILE ]]; then
-            if ! ajv test -s schema.json -d $JSON_FILE --valid; then
-              echo "Invalid JSON file: $JSON_FILE"
-              exit 1
-            else
-              echo "Valid JSON file: $JSON_FILE"
-            fi
+              if ! ajv test -s schema.json -d $FILE --valid; then
+                echo "JSON file does not conform to schema: $FILE"
+                exit 1
+              fi
+
+              echo "Valid JSON file: $FILE"
+            done
           else
-            echo "No JSON file found in the pull request"
+            echo "No JSON files found in the commit"
           fi
+
+
+
+
+
+# name: JSON Validation
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   validate-json:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Install jq
+#         run: sudo apt-get install -y jq
+
+#       - name: Install ajv-cli
+#         run: npm install -g ajv-cli
+
+#       - name: Validate JSON files
+#         run: |
+#           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.json$')
+
+#           if [[ -n $CHANGED_FILES ]]; then
+#             for FILE in $CHANGED_FILES; do
+#               if ! jq . $FILE > /dev/null 2>&1; then
+#                 echo "Invalid JSON file: $FILE"
+#                 exit 1
+#               fi
+
+#               if ! ajv test -s schema.json -d $FILE --valid; then
+#                 echo "JSON file does not conform to schema: $FILE"
+#                 exit 1
+#               fi
+
+#               echo "Valid JSON file: $FILE"
+#             done
+#           else
+#             echo "No JSON files found in the commit"
+#           fi
