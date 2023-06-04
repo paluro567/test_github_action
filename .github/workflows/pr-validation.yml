@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install ajv
+        run: npm install -g ajv
+
       - name: Checkout code
         uses: actions/checkout@v2
       
