@@ -14,10 +14,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: Validate JSON Configuration
+      - name: Validate PR Configuration
         run: |
-          CONFIG_FILE="path/to/config.json"
+          CONFIG_FILE="./config.json"
+          
+          # Validate JSON format
           if ! jq . "$CONFIG_FILE" > /dev/null 2>&1; then
             echo "Invalid JSON configuration file: $CONFIG_FILE"
+            exit 1
+          fi
+          
+          # Validate required fields
+          if [[ -z "$(jq -r '.github_url' "$CONFIG_FILE")" ]]; then
+            echo "Missing 'github_url' field in the JSON configuration file"
+            exit 1
+          fi
+          if [[ -z "$(jq -r '.dockerfile' "$CONFIG_FILE")" ]]; then
+            echo "Missing 'dockerfile' field in the JSON configuration file"
+            exit 1
+          fi
+          if [[ "$(jq -r '.build_root' "$CONFIG_FILE")" != "true" && "$(jq -r '.build_root' "$CONFIG_FILE")" != "false" ]]; then
+            echo "Invalid 'build_root' field value in the JSON configuration file. Expected true or false."
             exit 1
           fi
