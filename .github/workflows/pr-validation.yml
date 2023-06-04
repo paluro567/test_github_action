@@ -27,8 +27,9 @@ jobs:
 
       - name: Find JSON Files
         run: |
-          JSON_FILES=$(git diff --name-only ${{ github.base_ref }}...${{ github.sha }} | grep '\.json$')
+          JSON_FILES=$(git diff --name-only HEAD -- '*.json')
           # Rest of the steps...
+
 
 
           if [[ -n $JSON_FILES ]]; then
