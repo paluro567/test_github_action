@@ -21,6 +21,10 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
+        
+      - name: Print changed files
+        run: echo "$CHANGED_FILES"
+
 
       - name: Install ajv
         run: npm install -g ajv@7
