@@ -25,22 +25,13 @@ jobs:
       - name: Install ajv
         run: npm install -g ajv@7
 
-      - name: Validate PR JSON
+      - name: Validate JSON files
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git
-
-          
-          PR_FILES=$(git diff --name-only HEAD $(git merge-base HEAD main) -- '*.json')
-
-
-          if [[ -n $PR_FILES ]]; then
-            for FILE in $PR_FILES; do
-              if ! jq -e '.github_url' $FILE > /dev/null; then
-                echo "The JSON file '$FILE' does not contain the 'github_url' key"
-                exit 1
-              fi
-            done
-          else
-            echo "No JSON files found in the pull request"
-          fi
+          for file in $(git diff --name-only HEAD^ HEAD --diff-filter=d | grep -E '\.json$'); do
+            if jq -e 'has("github_url")' "$file" > /dev/null; then
+              echo "Valid JSON file: $file"
+            else
+              echo "Invalid JSON file: $file"
+              exit 1
+            fi
+          done
