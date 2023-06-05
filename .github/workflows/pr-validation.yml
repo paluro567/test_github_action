@@ -1,4 +1,5 @@
-name: PR Validation
+
+name: Check JSON Files in PRs
 
 on:
   pull_request:
@@ -7,90 +8,49 @@ on:
       - synchronize
 
 jobs:
-  validate-pr:
+  check_json_files:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+
       - name: Set up Node.js 16.x
         uses: actions/setup-node@v2
         with:
           node-version: 16
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install
 
-      - name: Install ajv
-        run: npm install -g ajv@7
-
-      - name: Validate PR Configuration
+      - name: Print branch references
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.json$')
+          echo "Base branch: ${{ env.GITHUB_BASE_REF }}"
+          echo "Head branch: ${{ env.GITHUB_HEAD_REF }}"
 
-          if [[ -n $CHANGED_FILES ]]; then
-            for FILE in $CHANGED_FILES; do
-              if ! jq . $FILE > /dev/null 2>&1; then
-                echo "Invalid JSON file: $FILE"
-                exit 1
-              fi
 
-              if ! ajv test -s ./schema.json -d $FILE --valid; then
-                echo "JSON file does not conform to schema: $FILE"
-                exit 1
-              fi
-
-              echo "Valid JSON file: $FILE"
-            done
-          else
-            echo "No JSON files found in the commit"
-          fi
+      - name: Check JSON files
+        run: |
+          base_commit=$(git merge-base origin/main ${{ github.head_ref }})
+          git diff --name-only --diff-filter=AM $base_commit ${{ github.head_ref }} | grep '\.json$' | xargs -I {} node -e '
+            const fs = require("fs");
+            const jsonData = fs.readFileSync(process.cwd() + "/" + "{}", "utf8");
+            const jsonObject = JSON.parse(jsonData);
+            if (!jsonObject.hasOwnProperty("github_url") || typeof jsonObject.github_url !== "string") {
+              console.error(`Error: The file ${process.cwd() + "/" + "{}"} does not have a "github_url" string value.`);
+              process.exit(1);
+            }
+          '
 
 
 
 
 
-# name: JSON Validation
 
-# on:
-#   push:
-#     branches:
-#       - main
 
-# jobs:
-#   validate-json:
-#     runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v2
 
-#       - name: Install jq
-#         run: sudo apt-get install -y jq
 
-#       - name: Install ajv-cli
-#         run: npm install -g ajv-cli
 
-#       - name: Validate JSON files
-#         run: |
-#           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.json$')
-
-#           if [[ -n $CHANGED_FILES ]]; then
-#             for FILE in $CHANGED_FILES; do
-#               if ! jq . $FILE > /dev/null 2>&1; then
-#                 echo "Invalid JSON file: $FILE"
-#                 exit 1
-#               fi
-
-#               if ! ajv test -s schema.json -d $FILE --valid; then
-#                 echo "JSON file does not conform to schema: $FILE"
-#                 exit 1
-#               fi
-
-#               echo "Valid JSON file: $FILE"
-#             done
-#           else
-#             echo "No JSON files found in the commit"
-#           fi
 
