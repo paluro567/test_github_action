@@ -26,7 +26,8 @@ jobs:
 
       - name: Check JSON files
         run: |
-          git diff --name-only --diff-filter=AM ${{ env.GITHUB_BASE_REF }}..${{ env.GITHUB_HEAD_REF }} | grep '\.json$' | xargs -I {} node -e '
+          base_commit=$(git merge-base ${{ env.GITHUB_BASE_REF }} ${{ env.GITHUB_HEAD_REF }})
+          git diff --name-only --diff-filter=AM $base_commit ${{ env.GITHUB_HEAD_REF }} | grep '\.json$' | xargs -I {} node -e '
             const fs = require("fs");
             const jsonData = fs.readFileSync(process.cwd() + "/" + "{}", "utf8");
             const jsonObject = JSON.parse(jsonData);
@@ -35,6 +36,7 @@ jobs:
               process.exit(1);
             }
           '
+
 
 
 
