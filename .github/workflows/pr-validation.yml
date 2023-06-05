@@ -25,16 +25,17 @@ jobs:
         run: npm install
 
       - name: Check JSON files
-        run: |
-          git diff --name-only --diff-filter=AM ${{ github.base_ref }}..${{ github.head_ref }} | grep '\.json$' | xargs -I {} node -e '
-            const fs = require("fs");
-            const jsonData = fs.readFileSync(process.cwd() + "/" + "{}", "utf8");
-            const jsonObject = JSON.parse(jsonData);
-            if (!jsonObject.hasOwnProperty("github_url") || typeof jsonObject.github_url !== "string") {
-              console.error(`Error: The file ${process.cwd() + "/" + "{}"} does not have a "github_url" string value.`);
-              process.exit(1);
-            }
-          '
+  run: |
+    git diff --name-only --diff-filter=AM ${{ env.GITHUB_BASE_REF }}..${{ env.GITHUB_HEAD_REF }} | grep '\.json$' | xargs -I {} node -e '
+      const fs = require("fs");
+      const jsonData = fs.readFileSync(process.cwd() + "/" + "{}", "utf8");
+      const jsonObject = JSON.parse(jsonData);
+      if (!jsonObject.hasOwnProperty("github_url") || typeof jsonObject.github_url !== "string") {
+        console.error(`Error: The file ${process.cwd() + "/" + "{}"} does not have a "github_url" string value.`);
+        process.exit(1);
+      }
+    '
+
 
 
 
