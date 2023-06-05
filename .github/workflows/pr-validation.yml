@@ -23,6 +23,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        
+      - name: Print branch references
+        run: |
+          echo "Base branch: ${{ env.GITHUB_BASE_REF }}"
+          echo "Head branch: ${{ env.GITHUB_HEAD_REF }}"
+
 
       - name: Check JSON files
         run: |
